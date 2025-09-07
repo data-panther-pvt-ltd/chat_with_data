@@ -44,7 +44,6 @@ node_modules
 Backend/__pycache__
 Backend/venv
 venv
-requirements.txt
 .env
 .idea
 .vscode
