@@ -27,13 +27,13 @@
 //   useEffect(() => {
 //     async function fetchDatasets() {
 //       try {
-//         const res = await fetch("http://35.223.93.183:8001/available-datasets");
+//         const res = await fetch("http://34.70.203.66:8000/available-datasets");
 //         if (!res.ok) throw new Error("Failed to fetch available datasets");
 //         const { datasets } = await res.json();
 //         setDatasets(datasets);
 
 //         const dataFetches = datasets.map((ds: any) =>
-//           fetch(`http://35.223.93.183:8001/${ds}`).then((r) => {
+//           fetch(`http://34.70.203.66:8000/${ds}`).then((r) => {
 //             if (!r.ok) throw new Error(`Failed to fetch dataset: ${ds}`);
 //             return r.json();
 //           })
@@ -467,13 +467,13 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDatasets() {
       try {
-        const res = await fetch("http://35.223.93.183:8001/available-datasets");
+        const res = await fetch("http://34.70.203.66:8000/available-datasets");
         if (!res.ok) throw new Error("Failed to fetch available datasets");
         const { datasets } = await res.json();
         setDatasets(datasets);
 
         const dataFetches = datasets.map((ds: any) =>
-          fetch(`http://35.223.93.183:8001/${ds}`).then((r) => {
+          fetch(`http://34.70.203.66:8000/${ds}`).then((r) => {
             if (!r.ok) throw new Error(`Failed to fetch dataset: ${ds}`);
             return r.json();
           })

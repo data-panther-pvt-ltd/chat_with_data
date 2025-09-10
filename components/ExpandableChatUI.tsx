@@ -284,7 +284,7 @@ export default ExpandableChatbot;
 // //   const sendToBackend = async (text) => {
 // //   try {
 // //     const response = await fetch(
-// //       `http://35.223.93.183:8001/llm-chat?prompt=${encodeURIComponent(text)}&dataset=gdp&model=deepseek`,
+// //       `http://34.70.203.66:8000/llm-chat?prompt=${encodeURIComponent(text)}&dataset=gdp&model=deepseek`,
 // //       {
 // //         method: 'POST',
 // //       }
@@ -314,7 +314,7 @@ export default ExpandableChatbot;
 //   });
 
 //   try {
-//     const response = await fetch(`http://35.223.93.183:8001/llm-chat?${queryParams.toString()}`, {
+//     const response = await fetch(`http://34.70.203.66:8000/llm-chat?${queryParams.toString()}`, {
 //       method: 'POST',
 //     });
 
