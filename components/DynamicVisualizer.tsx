@@ -60,7 +60,7 @@
 //   }, [isTextChatMode]);
 
 //   useEffect(() => {
-//     fetch("http://34.70.203.66:8000/available-datasets")
+//     fetch("http://34.28.203.178:8001/available-datasets")
 //       .then((res) => res.json())
 //       .then((data) => {
 //         console.log("Available datasets:", data);
@@ -93,7 +93,7 @@
 
 //     try {
 //       const queryParams = new URLSearchParams({ prompt, dataset, model });
-//       const res = await fetch(`http://34.70.203.66:8000/llm-chat?${queryParams.toString()}`, {
+//       const res = await fetch(`http://34.28.203.178:8001/llm-chat?${queryParams.toString()}`, {
 //         method: "POST",
 //         headers: {
 //           Accept: "application/json",
@@ -115,7 +115,7 @@
 
 //       if (json.imageUrl) {
 //         try {
-//           const imageRes = await fetch(`http://34.70.203.66:8000${json.imageUrl}`);
+//           const imageRes = await fetch(`http://34.28.203.178:8001${json.imageUrl}`);
 //           if (imageRes.ok) {
 //             const blob = await imageRes.blob();
 //             const imageUrl = URL.createObjectURL(blob);
@@ -163,7 +163,7 @@
 //         queryParams.append('dataset', selectedDataset);
 //       }
       
-//       const res = await fetch(`http://34.70.203.66:8000/text-chat?${queryParams.toString()}`, {
+//       const res = await fetch(`http://34.28.203.178:8001/text-chat?${queryParams.toString()}`, {
 //         method: "POST",
 //         headers: {
 //           Accept: "application/json",
@@ -662,7 +662,7 @@ export default function DashboardDemo() {
 
   const loadDatasets = async () => {
     try {
-      const res = await fetch("http://34.70.203.66:8000/available-datasets");
+      const res = await fetch("http://34.28.203.178:8001/available-datasets");
       const data = await res.json();
       console.log("Available datasets:", data);
       setDatasets(data.datasets);
@@ -706,7 +706,7 @@ export default function DashboardDemo() {
       formData.append("file", selectedFile);
       debugLog("FormData created and file appended");
 
-      const requestUrl = "http://34.70.203.66:8000/upload-csv";
+      const requestUrl = "http://34.28.203.178:8001/upload-csv";
       debugLog(`Making POST request to: ${requestUrl}`);
 
       const response = await fetch(requestUrl, {
@@ -773,7 +773,7 @@ const deleteFile = async () => {
     const requestBody = { filename: filename };
     debugLog(`Sending request body:`, requestBody);
 
-    const response = await fetch("http://34.70.203.66:8000/delete", {
+    const response = await fetch("http://34.28.203.178:8001/delete", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -843,7 +843,7 @@ const deleteFile = async () => {
 
     try {
       const queryParams = new URLSearchParams({ prompt, dataset, model });
-      const res = await fetch(`http://34.70.203.66:8000/llm-chat?${queryParams.toString()}`, {
+      const res = await fetch(`http://34.28.203.178:8001/llm-chat?${queryParams.toString()}`, {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -865,7 +865,7 @@ const deleteFile = async () => {
 
       if (json.imageUrl) {
         try {
-          const imageRes = await fetch(`http://34.70.203.66:8000${json.imageUrl}`);
+          const imageRes = await fetch(`http://34.28.203.178:8001${json.imageUrl}`);
           if (imageRes.ok) {
             const blob = await imageRes.blob();
             const imageUrl = URL.createObjectURL(blob);
@@ -912,7 +912,7 @@ const deleteFile = async () => {
         queryParams.append('dataset', selectedDataset);
       }
       
-      const res = await fetch(`http://34.70.203.66:8000/text-chat?${queryParams.toString()}`, {
+      const res = await fetch(`http://34.28.203.178:8001/text-chat?${queryParams.toString()}`, {
         method: "POST",
         headers: {
           Accept: "application/json",
