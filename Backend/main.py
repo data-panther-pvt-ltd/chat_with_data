@@ -74,7 +74,7 @@ def replace_nan_with_none(obj):
         return obj
 
 def get_dataset_summary(df: pd.DataFrame) -> str:
-    """Generate a summary of the dataset for LLM context"""
+    """Generate a comprehensive summary of the dataset for LLM context"""
     summary = f"""
 Dataset Summary:
 - Shape: {df.shape[0]} rows, {df.shape[1]} columns
@@ -82,18 +82,84 @@ Dataset Summary:
 - Data types: {df.dtypes.to_dict()}
 - Missing values: {df.isnull().sum().to_dict()}
 """
-    
+
     # Add sample data (first few rows)
     if len(df) > 0:
         sample_data = df.head(3).to_string(index=False)
         summary += f"\nSample data:\n{sample_data}"
-    
+
     # Add basic statistics for numeric columns
     numeric_cols = df.select_dtypes(include=['number']).columns
     if len(numeric_cols) > 0:
         stats = df[numeric_cols].describe().to_string()
         summary += f"\nNumeric column statistics:\n{stats}"
-    
+
+        # Correlation analysis for multiple numeric columns
+        if len(numeric_cols) > 1:
+            try:
+                corr_matrix = df[numeric_cols].corr()
+                # Find highest correlations (excluding diagonal)
+                corr_pairs = []
+                for i in range(len(corr_matrix.columns)):
+                    for j in range(i+1, len(corr_matrix.columns)):
+                        col1, col2 = corr_matrix.columns[i], corr_matrix.columns[j]
+                        corr_val = corr_matrix.iloc[i, j]
+                        if abs(corr_val) > 0.5:  # Only strong correlations
+                            corr_pairs.append(f"{col1} & {col2}: {corr_val:.3f}")
+
+                if corr_pairs:
+                    summary += f"\nStrong correlations (>0.5):\n" + "\n".join(corr_pairs)
+            except:
+                pass
+
+    # Categorical analysis
+    categorical_cols = df.select_dtypes(include=['object']).columns
+    if len(categorical_cols) > 0:
+        summary += f"\nCategorical columns analysis:"
+        for col in categorical_cols[:3]:  # Limit to first 3 categorical columns
+            try:
+                value_counts = df[col].value_counts().head(5)
+                unique_count = df[col].nunique()
+                summary += f"\n{col} ({unique_count} unique values):\n{value_counts.to_string()}"
+            except:
+                pass
+
+    # Data quality insights
+    summary += f"\nData Quality Insights:"
+
+    # Missing data patterns
+    missing_pct = (df.isnull().sum() / len(df) * 100).round(2)
+    high_missing = missing_pct[missing_pct > 10].to_dict()
+    if high_missing:
+        summary += f"\nColumns with >10% missing data: {high_missing}"
+
+    # Outlier detection for numeric columns
+    if len(numeric_cols) > 0:
+        outlier_info = []
+        for col in numeric_cols:
+            try:
+                Q1 = df[col].quantile(0.25)
+                Q3 = df[col].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)]
+                if len(outliers) > 0:
+                    outlier_pct = (len(outliers) / len(df) * 100).round(2)
+                    outlier_info.append(f"{col}: {len(outliers)} outliers ({outlier_pct}%)")
+            except:
+                pass
+
+        if outlier_info:
+            summary += f"\nPotential outliers detected:\n" + "\n".join(outlier_info)
+
+    # Business insights prompts
+    summary += f"\n\nBusiness Context Suggestions:"
+    summary += f"\n- Look for trends, patterns, and anomalies in the data"
+    summary += f"\n- Identify key performance indicators and growth opportunities"
+    summary += f"\n- Consider seasonal patterns, category performance, and market segments"
+    summary += f"\n- Analyze relationships between different metrics for strategic insights"
+
     return summary
 
 # API Endpoints
@@ -413,17 +479,17 @@ async def text_chat(
         }
 
         # Base system message
-        system_message = "You are a helpful AI assistant. Provide clear, concise, and helpful responses."
-        
+        system_message = "You are a helpful data analyst. Provide clear, relevant insights based on the user's specific question."
+
         # If dataset is provided, load it and add context
         if dataset:
             try:
                 filename = dataset.replace("-", "_") + ".csv"
                 df = load_csv(filename)
                 dataset_summary = get_dataset_summary(df)
-                dataset_context = f"\n\nYou have access to a dataset with the following information:\n{dataset_summary}"
+                dataset_context = f"\n\nYou have access to a dataset with the following comprehensive information:\n{dataset_summary}"
                 system_message += dataset_context
-                system_message += "\n\nWhen answering questions about the data, refer to this dataset information. You can provide insights, answer questions about the data structure, values, trends, and perform basic analysis based on the summary provided."
+                system_message += "\n\nAnswer the user's question directly using the dataset information. Only provide detailed analytical insights if specifically asked for business analysis, trends, or strategic recommendations."
             except Exception as e:
                 # If dataset loading fails, continue without it but mention the error
                 dataset_context = f"\n\nNote: Could not load dataset '{dataset}': {str(e)}"

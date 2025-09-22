@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FASTAPI_BASE_URL } from '../constants/constant';
 import { Upload, Trash2, Database, FileText, AlertCircle, CheckCircle2, Bug } from "lucide-react";
 
 interface ToastProps {
@@ -71,7 +72,7 @@ export default function CSVAnalyzerDashboard() {
     try {
       // Test basic connection
       debugLog("Step 1: Testing basic fetch to server root");
-      const rootResponse = await fetch("http://34.28.203.178:8001/", {
+      const rootResponse = await fetch(`${FASTAPI_BASE_URL}/`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -92,7 +93,7 @@ export default function CSVAnalyzerDashboard() {
 
       // Test health endpoint
       debugLog("Step 2: Testing health endpoint");
-      const healthResponse = await fetch("http://34.28.203.178:8001/health");
+      const healthResponse = await fetch(`${FASTAPI_BASE_URL}/health`);
       debugLog(`Health endpoint response status: ${healthResponse.status}`);
       
       if (healthResponse.ok) {
@@ -116,7 +117,7 @@ export default function CSVAnalyzerDashboard() {
     
     try {
       debugLog("Step 1: Creating fetch request to /list-csv");
-      const requestUrl = "http://34.28.203.178:8001/list-csv";
+      const requestUrl = `${FASTAPI_BASE_URL}/list-csv`;
       debugLog(`Request URL: ${requestUrl}`);
       
       const response = await fetch(requestUrl, {
@@ -212,7 +213,7 @@ export default function CSVAnalyzerDashboard() {
       formData.append("file", selectedFile);
       debugLog("FormData created and file appended");
 
-      const requestUrl = "http://34.28.203.178:8001/upload-csv";
+      const requestUrl = `${FASTAPI_BASE_URL}/upload-csv`;
       debugLog(`Making POST request to: ${requestUrl}`);
 
       const response = await fetch(requestUrl, {
@@ -273,7 +274,7 @@ export default function CSVAnalyzerDashboard() {
     debugLog("Delete state set to true");
 
     try {
-      const requestUrl = `http://34.28.203.178:8001/delete-csv?filename=${encodeURIComponent(filename)}`;
+      const requestUrl = `${FASTAPI_BASE_URL}/delete-csv?filename=${encodeURIComponent(filename)}`;
       debugLog(`Making DELETE request to: ${requestUrl}`);
 
       const response = await fetch(requestUrl, {
