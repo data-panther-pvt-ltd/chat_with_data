@@ -6,7 +6,7 @@ import math
 import time
 from fastapi import FastAPI, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 import markdown as md_lib
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
+from pathlib import Path
+
 
 # Configure matplotlib to use non-interactive backend
 matplotlib.use('Agg')
@@ -270,6 +272,8 @@ async def llm_chat(
     try:
         print(f"LLM Chat request - Prompt: {prompt[:50]}..., Dataset: {dataset}, Model: {model}")
         print(f"API Key exists: {bool(OPENAI_API_KEY)}")
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="Server missing OPENAI_API_KEY")
         
         enhanced_prompt = f"""
 Given a dataset loaded as 'df' (pandas DataFrame), generate Python matplotlib code to: {prompt}
@@ -312,10 +316,13 @@ Generate only the plotting code:
         response = requests.post(API_URL, headers=headers, json=body, timeout=30)
         print(f"Got response: {response.status_code}")
 
+        if response.status_code == 401:
+            print(f"API Error: Unauthorized - {response.text}")
+            raise HTTPException(status_code=401, detail="Upstream unauthorized: check OPENAI_API_KEY")
         if response.status_code != 200:
             error_detail = f"OpenAI API error: {response.status_code} - {response.text}"
             print(f"API Error: {error_detail}")
-            raise HTTPException(status_code=500, detail=error_detail)
+            raise HTTPException(status_code=502, detail=error_detail)
 
         result = response.json()
         llm_response = result["choices"][0]["message"]["content"]
@@ -406,6 +413,8 @@ async def text_chat(
     """Text-based chat with optional dataset context"""
     try:
         print(f"Text chat request - Prompt: {prompt[:50]}..., Dataset: {dataset}")
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="Server missing OPENAI_API_KEY")
         
         headers = {
             "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -444,9 +453,12 @@ async def text_chat(
 
         response = requests.post(API_URL, headers=headers, json=body, timeout=30)
         
+        if response.status_code == 401:
+            print(f"Text chat API unauthorized: {response.text}")
+            raise HTTPException(status_code=401, detail="Upstream unauthorized: check OPENAI_API_KEY")
         if response.status_code != 200:
             print(f"Text chat API error: {response.status_code} - {response.text}")
-            raise HTTPException(status_code=500, detail=f"API error: {response.status_code}")
+            raise HTTPException(status_code=502, detail=f"API error: {response.status_code}")
 
         result = response.json()
         markdown_reply = result["choices"][0]["message"]["content"]
@@ -458,6 +470,86 @@ async def text_chat(
 
     except Exception as e:
         print(f"Text chat error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/text-chat/stream")
+async def text_chat_stream(
+    prompt: str = Query(...),
+    dataset: str = Query(None),
+    lang: str = Query("en")
+):
+    """Stream text chat responses token-by-token. Returns text/plain stream."""
+    try:
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="Server missing OPENAI_API_KEY")
+
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+
+        # Base system message with language control
+        lang = (lang or "en").lower()
+        if lang == "ar":
+            system_message = (
+                "You are a helpful AI assistant. Respond in Arabic only. "
+                "Use clear, natural Arabic phrasing."
+            )
+        else:
+            system_message = "You are a helpful AI assistant. Provide clear, concise, and helpful responses."
+
+        # Optional dataset context
+        if dataset:
+            try:
+                filename = dataset.replace("-", "_") + ".csv"
+                df = load_csv(filename)
+                dataset_summary = get_dataset_summary(df)
+                dataset_context = f"\n\nYou have access to a dataset with the following information:\n{dataset_summary}"
+                system_message += dataset_context
+                system_message += ("\n\nWhen answering questions about the data, refer to this dataset information. "
+                                   "Provide insights and analysis based on the summary provided.")
+            except Exception as e:
+                system_message += f"\n\nNote: Could not load dataset '{dataset}': {str(e)}"
+
+        user_message = prompt if not dataset else f"[Context: Analyzing dataset '{dataset}']\n\n{prompt}"
+
+        body = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message},
+            ],
+            "temperature": 0.7,
+            "stream": True,
+        }
+
+        def event_stream():
+            with requests.post(API_URL, headers=headers, json=body, stream=True, timeout=60) as r:
+                if r.status_code == 401:
+                    raise HTTPException(status_code=401, detail="Upstream unauthorized: check OPENAI_API_KEY")
+                if r.status_code != 200:
+                    raise HTTPException(status_code=502, detail=f"API error: {r.status_code}")
+                for line in r.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        data = line[len("data: "):].strip()
+                        if data == "[DONE]":
+                            break
+                        try:
+                            obj = __import__("json").loads(data)
+                            delta = obj.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if delta:
+                                yield delta
+                        except Exception:
+                            # If parsing fails, skip the chunk
+                            continue
+
+        return StreamingResponse(event_stream(), media_type="text/plain")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Streaming text chat error: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 # Plot Serving Endpoint
@@ -623,6 +715,48 @@ async def debug_simple_request():
             "error_type": type(e).__name__,
             "traceback": traceback.format_exc()
         }
+
+############ OpenAI API key storage ############
+CREDS_FILE = Path(__file__).parent / "credentials.yaml"
+
+def _read_yaml() -> dict:
+    if CREDS_FILE.exists():
+        with CREDS_FILE.open("r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+def _write_yaml(data: dict) -> None:
+    with CREDS_FILE.open("w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+
+class ApiKeyPayload(BaseModel):
+    api_key: str
+
+@app.get("/config/openai-key")
+def get_openai_key():
+    data = _read_yaml()
+    key = (data.get("openai") or {}).get("api_key")
+    return {"api_key": key or None}
+
+@app.post("/config/openai-key")
+def set_openai_key(payload: ApiKeyPayload):
+    data = _read_yaml()
+    if "openai" not in data or not isinstance(data["openai"], dict):
+        data["openai"] = {}
+    data["openai"]["api_key"] = payload.api_key
+    _write_yaml(data)
+    return {"status": "ok"}
+
+@app.delete("/config/openai-key")
+def delete_openai_key():
+    data = _read_yaml()
+    if "openai" in data and isinstance(data["openai"], dict) and "api_key" in data["openai"]:
+        del data["openai"]["api_key"]
+        if not data["openai"]:
+            del data["openai"]
+        _write_yaml(data)
+    return {"status": "ok"}
+
 
 # Main execution
 if __name__ == "__main__":

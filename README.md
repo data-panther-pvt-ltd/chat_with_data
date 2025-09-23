@@ -75,7 +75,7 @@ Transform your data visualization experience with an AI-powered dashboard assist
      ```
    </details>
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+5. Open [http://localhost:8000:3000](http://localhost:8000:3000) in your browser to see the application.
 
 ## 🧩 How It Works
 
