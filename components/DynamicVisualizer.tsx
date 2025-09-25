@@ -2,7 +2,9 @@
 
 import React, { JSX, useEffect, useState, useRef } from "react";
 import { FASTAPI_BASE_URL } from '../constants/constant';
+import { useLanguage } from "./LanguageProvider";
 import { Send, Database, Bot, User, Image, AlertCircle, Loader2, MessageCircle, Upload, Trash2, FileText, CheckCircle2, Bug, Menu, X } from "lucide-react";
+import Settings from "./Settings";
 
 interface ToastProps {
   message: string;
@@ -41,6 +43,7 @@ function Toast({ message, type, onClose }: ToastProps) {
 }
 
 export default function DashboardDemo() {
+  const { language, isRTL } = useLanguage();
   const [datasets, setDatasets] = useState<string[]>([]);
   const [selectedDataset, setSelectedDataset] = useState<string>("");
   const [chatInput, setChatInput] = useState("");
@@ -50,7 +53,8 @@ export default function DashboardDemo() {
   const [textChatLog, setTextChatLog] = useState<string[]>([]);
   const [textChatInput, setTextChatInput] = useState("");
   const [textChatLoading, setTextChatLoading] = useState(false);
-  
+  const streamBufferRef = useRef<string>("");
+
   // Sidebar states
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,7 +63,115 @@ export default function DashboardDemo() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'debug' } | null>(null);
   const [debugMode, setDebugMode] = useState(false);
-  
+  const t = (key: string) => {
+    const dict: Record<string, string> = language === 'ar' ? {
+      text_chat_title: "مساعد الدردشة النصية",
+      ask_about_dataset: "اسألني عن مجموعة البيانات \"{dataset}\" أو أي شيء آخر!",
+      ask_anything: "اسألني أي شيء! اختر مجموعة بيانات بالأعلى للحصول على رؤى خاصة بالبيانات.",
+      thinking: "جاري التفكير...",
+      placeholder_dataset: "اسأل عن مجموعة بيانات {dataset} أو أي شيء آخر...",
+      placeholder_anything: "اسألني أي شيء أو اختر مجموعة بيانات للحصول على رؤى...",
+      placeholder_viz: "اطلب مني إنشاء رسوم، تحليل البيانات، أو توليد الرؤى...",
+      sending: "جارٍ الإرسال...",
+      send: "إرسال",
+      mode: "الوضع",
+      text_chat: "دردشة نصية",
+      data_viz: "تصوّر البيانات",
+      dataset: "مجموعة البيانات",
+      none: "لا شيء",
+      active_in_chat: "(نشطة في الدردشة)",
+      available: "المتوفر",
+      datasets: "مجموعات",
+      loading: "جارٍ التحميل...",
+      you: "أنت",
+      bot: "الروبوت",
+      error: "خطأ",
+      error_enter_message: "خطأ: يرجى إدخال رسالة",
+      toggle_text_chat: "تبديل وضع الدردشة النصية",
+      text_chat_button: "دردشة نصية",
+      connected: "متصل",
+      ready_title: "جاهز لتحليل بياناتك",
+      ready_hint: "جرّب أن تطلب إنشاء تصوّرات مثل \"أنشئ مخططًا مبعثرًا للبيانات\" أو \"أرني مخططًا شريطيًا\"",
+      analyzing_data: "جارٍ تحليل البيانات...",
+      dataset_label: "مجموعة البيانات:",
+      select_dataset_placeholder: "-- اختر مجموعة بيانات --",
+      file_manager: "مدير الملفات",
+      upload_dataset: "رفع مجموعة بيانات",
+      click_select_csv: "انقر لتحديد ملف CSV",
+      supported_csv_only: "الصيغة المدعومة: ملفات .csv فقط",
+      uploading: "جارٍ الرفع...",
+      upload_csv: "رفع CSV",
+      delete_dataset: "حذف مجموعة بيانات",
+      select_csv_option: "-- اختر ملف CSV --",
+      deleting: "جارٍ الحذف...",
+      delete_file: "حذف الملف",
+      available_datasets_count: "مجموعات البيانات المتاحة",
+      no_csv_yet: "لا توجد ملفات CSV بعد",
+      upload_first_hint: "ارفع أول مجموعة بيانات للبدء",
+      dataset_n: "مجموعة",
+      toast_select_csv: "يرجى اختيار ملف CSV",
+      toast_csv_only: "مسموح فقط بملفات .csv",
+      toast_upload_success: "تم رفع الملف بنجاح!",
+      toast_upload_failed: "فشل الرفع",
+      toast_delete_select: "يرجى اختيار ملف للحذف",
+      toast_delete_success: "تم حذف الملف بنجاح!",
+      toast_delete_failed: "فشل الحذف",
+    } : {
+      text_chat_title: "Text Chat Assistant",
+      ask_about_dataset: "Ask me questions about the \"{dataset}\" dataset or anything else!",
+      ask_anything: "Ask me anything! Select a dataset above to get data-specific insights.",
+      thinking: "Thinking...",
+      placeholder_dataset: "Ask about the {dataset} dataset or anything else...",
+      placeholder_anything: "Ask me anything or select a dataset for data insights...",
+      placeholder_viz: "Ask me to create charts, analyze data, or generate insights...",
+      sending: "Sending...",
+      send: "Send",
+      mode: "Mode",
+      text_chat: "Text Chat",
+      data_viz: "Data Visualization",
+      dataset: "Dataset",
+      none: "None",
+      active_in_chat: "(Active in chat)",
+      available: "Available",
+      datasets: "datasets",
+      loading: "Loading...",
+      you: "You",
+      bot: "Bot",
+      error: "Error",
+      error_enter_message: "Error: Please enter a message",
+      toggle_text_chat: "Toggle Text Chat Mode",
+      text_chat_button: "Text Chat",
+      connected: "Connected",
+      ready_title: "Ready to analyze your data",
+      ready_hint: "Try asking me to create visualizations like \"Create a scatter plot of the data\" or \"Show me a bar chart\"",
+      analyzing_data: "Analyzing data...",
+      dataset_label: "Dataset:",
+      select_dataset_placeholder: "-- Select Dataset --",
+      file_manager: "File Manager",
+      upload_dataset: "Upload Dataset",
+      click_select_csv: "Click to select CSV file",
+      supported_csv_only: "Supported format: .csv files only",
+      uploading: "Uploading...",
+      upload_csv: "Upload CSV",
+      delete_dataset: "Delete Dataset",
+      select_csv_option: "-- Select a CSV file --",
+      deleting: "Deleting...",
+      delete_file: "Delete File",
+      available_datasets_count: "Available Datasets",
+      no_csv_yet: "No CSV files uploaded yet",
+      upload_first_hint: "Upload your first dataset to get started",
+      dataset_n: "Dataset",
+      toast_select_csv: "Please select a CSV file",
+      toast_csv_only: "Only .csv files are allowed",
+      toast_upload_success: "File uploaded successfully!",
+      toast_upload_failed: "Upload failed",
+      toast_delete_select: "Please select a file to delete",
+      toast_delete_success: "File deleted successfully!",
+      toast_delete_failed: "Delete failed",
+    };
+    return dict[key] ?? key;
+  };
+
   // Refs for autoscroll functionality
   const chatContainerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const textChatContainerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
@@ -104,6 +216,16 @@ export default function DashboardDemo() {
     return () => clearTimeout(timer);
   }, [isTextChatMode]);
 
+  useEffect(() => {
+    setChatLog([]);
+    setTextChatLog([]);
+  }, [language]);
+
+  useEffect(() => {
+    setChatLog([]);
+    setTextChatLog([]);
+  }, [selectedDataset]);
+
   const debugLog = (message: string, data?: any) => {
     console.log(`[DEBUG] ${message}`, data || '');
     if (debugMode) {
@@ -113,6 +235,26 @@ export default function DashboardDemo() {
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'debug') => {
     setToast({ message, type });
+  };
+
+  const formatAssistantText = (input: string): string => {
+    if (!input) return "";
+    let text = input.replace(/\r\n?/g, "\n");
+    // Fix malformed markdown like "**Heading:* *" by removing stray "* *"
+    text = text.replace(/\*\s*\*/g, "");
+    text = text.replace(/^\s*#{1,6}\s+(.*)$/gm, (_m, p1) => `**${p1.trim()}**`);
+    // Ensure list bullets start on new lines
+    text = text.replace(/([^\n])\s*-\s(?=\S)/g, (_m, _p1) => `${_m[0]}\n- `).replace(/^\s*-\s+/gm, "- ");
+    text = text.replace(/([^\n])\s*\*\s(?=\S)/g, (_m, _p1) => `${_m[0]}\n* `).replace(/^\s*\*\s+/gm, "* ");
+    // Numbered lists (1. or 1)) start on new lines
+    text = text.replace(/([^\n])\s*(\d+)[\.)]\s(?=\S)/g, (_m, p1, p2) => `${p1}\n${p2}. `);
+    text = text.replace(/\n{3,}/g, "\n\n");
+    // Convert ASCII digits to Arabic-Indic when Arabic is selected
+    if (language === 'ar') {
+      const arabicDigitsMap: Record<string, string> = { '0': '٠','1': '١','2': '٢','3': '٣','4': '٤','5': '٥','6': '٦','7': '٧','8': '٨','9': '٩' };
+      text = text.replace(/[0-9]/g, (d) => arabicDigitsMap[d] || d);
+    }
+    return text;
   };
 
   const loadDatasets = async () => {
@@ -140,7 +282,7 @@ export default function DashboardDemo() {
     
     if (!selectedFile) {
       debugLog("No file selected");
-      showToast("Please select a CSV file", "error");
+      showToast(t('toast_select_csv'), "error");
       return;
     }
 
@@ -148,7 +290,7 @@ export default function DashboardDemo() {
 
     if (!selectedFile.name.toLowerCase().endsWith('.csv')) {
       debugLog("File extension validation failed");
-      showToast("Only .csv files are allowed", "error");
+      showToast(t('toast_csv_only'), "error");
       return;
     }
 
@@ -184,7 +326,7 @@ export default function DashboardDemo() {
       
       if (response.ok) {
         debugLog("Upload successful");
-        showToast(data.message || "File uploaded successfully!", "success");
+        showToast(data.message || t('toast_upload_success'), "success");
         setSelectedFile(null);
         const fileInput = document.getElementById('csv-upload') as HTMLInputElement;
         if (fileInput) {
@@ -195,11 +337,11 @@ export default function DashboardDemo() {
         await loadDatasets();
       } else {
         debugLog("Upload failed with error response");
-        showToast(data.detail || data.message || "Upload failed", "error");
+        showToast(data.detail || data.message || t('toast_upload_failed'), "error");
       }
     } catch (error) {
       debugLog("Upload error:", error);
-      showToast(`Network error during upload: ${error}`, "error");
+    showToast(`Network error during upload: ${error}`, "error");
     } finally {
       setIsUploading(false);
       debugLog("Upload state set to false");
@@ -211,7 +353,7 @@ const deleteFile = async () => {
   
   if (!fileToDelete.trim()) {
     debugLog("No filename selected");
-    showToast("Please select a file to delete", "error");
+    showToast(t('toast_delete_select'), "error");
     return;
   }
 
@@ -241,7 +383,7 @@ const deleteFile = async () => {
     if (responseText) {
       const data = JSON.parse(responseText);
       if (response.ok) {
-        showToast(data.message || "File deleted successfully!", "success");
+        showToast(data.message || t('toast_delete_success'), "success");
         setFileToDelete("");
         await loadDatasets();
         
@@ -250,7 +392,7 @@ const deleteFile = async () => {
           debugLog("Cleared selected dataset as it was deleted");
         }
       } else {
-        showToast(data.detail || "Delete failed", "error");
+        showToast(data.detail || t('toast_delete_failed'), "error");
       }
     }
   } catch (error) {
@@ -353,38 +495,54 @@ const deleteFile = async () => {
   async function handleTextChatSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!textChatInput.trim()) {
-      setTextChatLog((prev) => [...prev, "Error: Please enter a message"]);
+      setTextChatLog((prev) => [...prev, (language === 'ar' ? 'خطأ: يرجى إدخال رسالة' : 'Error: Please enter a message')]);
       return;
     }
 
     const userMessage = textChatInput.trim();
-    setTextChatLog((prev) => [...prev, `You: ${userMessage}`]);
+    setTextChatLog((prev) => [...prev, `${language === 'ar' ? 'أنت' : 'You'}: ${userMessage}`]);
     setTextChatLoading(true);
 
     try {
-      const queryParams = new URLSearchParams({ prompt: userMessage });
+      const queryParams = new URLSearchParams({ prompt: userMessage, lang: language });
       if (selectedDataset) {
         queryParams.append('dataset', selectedDataset);
       }
       
       const res = await fetch(`${FASTAPI_BASE_URL}/text-chat?${queryParams.toString()}`, {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "text/plain" },
       });
 
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         const errorText = await res.text();
         throw new Error(`HTTP ${res.status}: ${errorText}`);
       }
 
-      const json = await res.json();
-      setTextChatLog((prev) => [...prev, `Bot: ${json.reply}`]);
+      // Seed bot message
+      const botLabel = (language === 'ar' ? 'الروبوت' : 'Bot');
+      setTextChatLog((prev) => [...prev, `${botLabel}: `]);
+      streamBufferRef.current = "";
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        streamBufferRef.current += chunk;
+        const formatted = formatAssistantText(streamBufferRef.current);
+        setTextChatLog((prev) => {
+          const copy = [...prev];
+          const last = copy.length - 1;
+          copy[last] = `${botLabel}: ${formatted}`;
+          return copy;
+        });
+      }
       
     } catch (err: any) {
       console.error("Text chat error:", err);
-      setTextChatLog((prev) => [...prev, `Error: ${err.message}`]);
+      setTextChatLog((prev) => [...prev, `${language === 'ar' ? 'خطأ' : 'Error'}: ${err.message}`]);
     }
 
     setTextChatInput("");
@@ -437,13 +595,20 @@ const deleteFile = async () => {
       );
     }
 
-    if (entryStr.startsWith("Bot:")) {
+    if (entryStr.startsWith("Bot:") || entryStr.startsWith("الروبوت:")) {
+      const botLabel = language === 'ar' ? 'الروبوت' : 'Bot';
+      const raw = entryStr.replace(`${botLabel}: `, "").trim();
+      const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const html = escapeHtml(raw)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1<\/strong>')
+        .replace(/`([^`]+)`/g, '<code>$1<\/code>')
+        .replace(/\n/g, '<br/>');
       return (
-        <div key={index} className="flex justify-start animate-slideInLeft">
+        <div key={index} className={`flex justify-start animate-slideInLeft ${language === 'ar' ? 'text-right' : ''}`}>
           <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md shadow-sm">
             <div className="flex items-start gap-2">
               <Bot className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-600" />
-              <span className="text-sm text-gray-800">{entryStr.replace("Bot: ", "")}</span>
+              <div className="text-sm text-gray-800" dangerouslySetInnerHTML={{ __html: html }} />
             </div>
           </div>
         </div>
@@ -486,13 +651,20 @@ const deleteFile = async () => {
       );
     }
 
-    if (entry.startsWith("Bot:")) {
+    if (entry.startsWith("Bot:") || entry.startsWith("الروبوت:")) {
+      const botLabel = language === 'ar' ? 'الروبوت' : 'Bot';
+      const raw = entry.replace(`${botLabel}: `, "").trim();
+      const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const html = escapeHtml(raw)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1<\/strong>')
+        .replace(/`([^`]+)`/g, '<code>$1<\/code>')
+        .replace(/\n/g, '<br/>');
       return (
-        <div key={index} className="flex justify-start animate-slideInLeft">
+        <div key={index} className={`flex justify-start animate-slideInLeft ${language === 'ar' ? 'text-right' : ''}`}>
           <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md shadow-sm">
             <div className="flex items-start gap-2">
               <MessageCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-600" />
-              <span className="text-sm text-gray-800">{entry.replace("Bot: ", "")}</span>
+              <div className="text-sm text-gray-800" dangerouslySetInnerHTML={{ __html: html }} />
             </div>
           </div>
         </div>
@@ -578,7 +750,7 @@ const deleteFile = async () => {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Database className="w-6 h-6 text-blue-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">File Manager</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('file_manager')}</h2>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -593,7 +765,7 @@ const deleteFile = async () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Upload className="w-5 h-5 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-800">Upload Dataset</h3>
+              <h3 className="text-lg font-semibold text-gray-800">{t('upload_dataset')}</h3>
             </div>
             
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
@@ -612,12 +784,8 @@ const deleteFile = async () => {
                   <FileText className="w-6 h-6 text-gray-600" />
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Click to select CSV file
-                  </span>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported format: .csv files only
-                  </p>
+                  <span className="text-sm font-medium text-gray-700">{t('click_select_csv')}</span>
+                  <p className="text-xs text-gray-500 mt-1">{t('supported_csv_only')}</p>
                 </div>
               </label>
             </div>
@@ -651,12 +819,12 @@ const deleteFile = async () => {
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  Uploading...
+                  {t('uploading')}
                 </>
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  Upload CSV
+                  {t('upload_csv')}
                 </>
               )}
             </button>
@@ -666,7 +834,7 @@ const deleteFile = async () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Trash2 className="w-5 h-5 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-800">Delete Dataset</h3>
+              <h3 className="text-lg font-semibold text-gray-800">{t('delete_dataset')}</h3>
             </div>
 
             <div className="space-y-3">
@@ -675,7 +843,7 @@ const deleteFile = async () => {
                 onChange={(e) => setFileToDelete(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors"
               >
-                <option value="">-- Select a CSV file --</option>
+                <option value="">{t('select_csv_option')}</option>
                 {datasets.map((file) => (
                   <option key={file} value={file}>
                     {file}
@@ -691,12 +859,12 @@ const deleteFile = async () => {
                 {isDeleting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Deleting...
+                    {t('deleting')}
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
-                    Delete File
+                    {t('delete_file')}
                   </>
                 )}
               </button>
@@ -704,17 +872,17 @@ const deleteFile = async () => {
           </div>
 
           {/* Available Datasets */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="w-5 h-5 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-800">Available Datasets ({datasets.length})</h3>
+              <h3 className="text-lg font-semibold text-gray-800">{t('available_datasets_count')} ({datasets.length})</h3>
             </div>
             
             {datasets.length === 0 ? (
               <div className="text-center py-6">
                 <Database className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No CSV files uploaded yet</p>
-                <p className="text-gray-400 text-xs mt-1">Upload your first dataset to get started</p>
+                <p className="text-gray-500 text-sm">{t('no_csv_yet')}</p>
+                <p className="text-gray-400 text-xs mt-1">{t('upload_first_hint')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -731,14 +899,16 @@ const deleteFile = async () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 truncate text-sm">{file}</p>
-                        <p className="text-xs text-gray-500">Dataset {index + 1}</p>
+                        <p className="text-xs text-gray-500">{t('dataset_n')} {index + 1}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
+
+        <Settings/>
         </div>
       </div>
 
@@ -766,7 +936,7 @@ const deleteFile = async () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200 mb-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="font-semibold text-gray-800">Dataset:</label>
+                <label className="font-semibold text-gray-800">{t('dataset_label')}</label>
               </div>
 
               <select
@@ -774,7 +944,7 @@ const deleteFile = async () => {
                 value={selectedDataset}
                 onChange={(e) => setSelectedDataset(e.target.value)}
               >
-                <option value="">-- Select Dataset --</option>
+                <option value="">{t('select_dataset_placeholder')}</option>
                 {datasets.map((ds) => (
                   <option key={ds} value={ds}>
                     {ds}
@@ -790,15 +960,15 @@ const deleteFile = async () => {
                     ? "bg-green-600 text-white shadow-lg"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
                 }`}
-                title="Toggle Text Chat Mode"
+                title={t('toggle_text_chat')}
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="text-sm">Text Chat</span>
+                <span className="text-sm">{t('text_chat_button')}</span>
               </button>
 
               {selectedDataset && !isTextChatMode && (
                 <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Connected
+                  {t('connected')}
                 </div>
               )}
             </div> 
@@ -816,19 +986,17 @@ const deleteFile = async () => {
                   {chatLog.length === 0 && (
                     <div className="text-center py-12">
                       <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Ready to analyze your data</h3>
-                      <p className="text-gray-500 text-sm max-w-md mx-auto">
-                        Try asking me to create visualizations like "Create a scatter plot of the data" or "Show me a bar chart"
-                      </p>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('ready_title')}</h3>
+                      <p className="text-gray-500 text-sm max-w-md mx-auto">{t('ready_hint')}</p>
                     </div>
                   )}
                   {chatLog.map(renderChatEntry)}
                   {loading && (
-                    <div className="flex justify-start animate-fadeIn">
+                       <div className="flex justify-start animate-fadeIn">
                       <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                          <span className="text-sm text-gray-600">Analyzing data...</span>
+                          <span className="text-sm text-gray-600">{t('analyzing_data')}</span>
                         </div>
                       </div>
                     </div>
@@ -840,11 +1008,11 @@ const deleteFile = async () => {
                   {textChatLog.length === 0 && (
                     <div className="text-center py-12">
                       <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Text Chat Assistant</h3>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">{language === 'ar' ? 'مساعد الدردشة النصية' : 'Text Chat Assistant'}</h3>
                       <p className="text-gray-500 text-sm max-w-md mx-auto">
                         {selectedDataset 
-                          ? `Ask me questions about the "${selectedDataset}" dataset or anything else!`
-                          : "Ask me anything! Select a dataset above to get data-specific insights."
+                          ? (language === 'ar' ? `اسألني عن مجموعة البيانات "${selectedDataset}" أو أي شيء آخر!` : `Ask me questions about the "${selectedDataset}" dataset or anything else!`)
+                          : (language === 'ar' ? 'اسألني أي شيء! اختر مجموعة بيانات بالأعلى للحصول على رؤى خاصة بالبيانات.' : 'Ask me anything! Select a dataset above to get data-specific insights.')
                         }
                       </p>
                     </div>
@@ -855,7 +1023,7 @@ const deleteFile = async () => {
                       <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                          <span className="text-sm text-gray-600">Thinking...</span>
+                          <span className="text-sm text-gray-600">{language === 'ar' ? 'جاري التفكير...' : 'Thinking...'}</span>
                         </div>
                       </div>
                     </div>
@@ -870,15 +1038,15 @@ const deleteFile = async () => {
             <div className="flex gap-3 items-end">
               <div className="flex-1">
                 <input
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-500"
+                className={`w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-500 ${isTextChatMode && (language === 'ar') ? 'text-right' : ''}`}
                   value={isTextChatMode ? textChatInput : chatInput}
                   onChange={(e) => isTextChatMode ? setTextChatInput(e.target.value) : setChatInput(e.target.value)}
                   placeholder={
                     isTextChatMode 
-                      ? (selectedDataset 
-                          ? `Ask about the ${selectedDataset} dataset or anything else...` 
-                          : "Ask me anything or select a dataset for data insights...")
-                      : "Ask me to create charts, analyze data, or generate insights..."
+                    ? (selectedDataset
+                        ? (language === 'ar' ? `اسأل عن مجموعة بيانات ${selectedDataset} أو أي شيء آخر...` : `Ask about the ${selectedDataset} dataset or anything else...`)
+                        : (language === 'ar' ? 'اسألني أي شيء أو اختر مجموعة بيانات للحصول على رؤى...' : 'Ask me anything or select a dataset for data insights...'))
+                    : (language === 'ar' ? 'اطلب مني إنشاء رسوم، تحليل البيانات، أو توليد الرؤى...' : 'Ask me to create charts, analyze data, or generate insights...')
                   }
                   onKeyPress={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -920,20 +1088,20 @@ const deleteFile = async () => {
                   isTextChatMode ? 'bg-green-500' : (selectedDataset ? 'bg-green-500' : 'bg-gray-400')
                 }`}></div>
                 <span className="text-gray-700">
-                  <span className="font-medium">Mode:</span> {isTextChatMode ? "Text Chat" : "Data Visualization"}
+                <span className="font-medium">{language === 'ar' ? 'الوضع' : 'Mode'}:</span> {isTextChatMode ? (language === 'ar' ? 'دردشة نصية' : 'Text Chat') : (language === 'ar' ? 'تصوّر البيانات' : 'Data Visualization')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${selectedDataset && !isTextChatMode ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">
-                  <span className="font-medium">Dataset:</span> {selectedDataset || "None"}
-                  {isTextChatMode && selectedDataset && <span className="text-green-600 ml-1">(Active in chat)</span>}
+                <span className="font-medium">{language === 'ar' ? 'مجموعة البيانات' : 'Dataset'}:</span> {selectedDataset || (language === 'ar' ? 'لا شيء' : 'None')}
+                {isTextChatMode && selectedDataset && <span className="text-green-600 ml-1">{language === 'ar' ? '(نشطة في الدردشة)' : '(Active in chat)'}</span>}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-gray-500" />
                 <span className="text-gray-700">
-                  <span className="font-medium">Available:</span> {datasets.length > 0 ? `${datasets.length} datasets` : "Loading..."}
+                <span className="font-medium">{language === 'ar' ? 'المتوفر' : 'Available'}:</span> {datasets.length > 0 ? `${datasets.length} ${language === 'ar' ? 'مجموعات' : 'datasets'}` : (language === 'ar' ? 'جارٍ التحميل...' : 'Loading...')}
                 </span>
               </div>
             </div>

@@ -48,3 +48,5 @@ venv
 .idea
 .vscode
 /Backend/__pycache__
+/Backend/.env
+.next

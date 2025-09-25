@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import DashboardDemo from "../../components/DynamicVisualizer";
 import CSVAnalyzerDashboard from "../../components/DropCSV";
+import { useLanguage } from "@/components/LanguageProvider";
 import {
   ChartBarIcon,
   TableCellsIcon,
@@ -70,6 +71,7 @@ const NavButton = ({
 
 export default function InsightsPage() {
   const router = useRouter();
+  const { language, toggleLanguage } = useLanguage();
   const [authChecked, setAuthChecked] = useState(false);
   const [activeTab, setActiveTab] = useState("csv");
   const [isVisible, setIsVisible] = useState(true);
@@ -128,6 +130,42 @@ export default function InsightsPage() {
     router.push("/login");
   };
 
+  const t = (key: string) => {
+    const dict = language === "ar" ? {
+      nav_csv: "محلل CSV",
+      nav_visual: "رؤى مرئية",
+      nav_dashboard: "لوحة التحكم",
+      logout: "تسجيل الخروج",
+      toggle_title_en: "التبديل إلى الإنجليزية",
+      toggle_title_ar: "التبديل إلى العربية",
+      arabic: "العربية",
+      english: "English",
+    } : {
+      nav_csv: "CSV Analyzer",
+      nav_visual: "Visual Insights",
+      nav_dashboard: "Dashboard",
+      logout: "Logout",
+      toggle_title_en: "Switch to English",
+      toggle_title_ar: "Switch to Arabic",
+      arabic: "Arabic",
+      english: "English",
+    };
+    return dict[key] ?? key;
+  };
+
+  const labelFor = (id: string) => {
+    switch (id) {
+      case "csv":
+        return t("nav_csv");
+      case "visual":
+        return t("nav_visual");
+      case "dashboard":
+        return t("nav_dashboard");
+      default:
+        return id;
+    }
+  };
+
   // 🧩 Render the active tab component
   const renderActiveComponent = () => {
     switch (activeTab) {
@@ -169,16 +207,23 @@ export default function InsightsPage() {
                   {navItems.map((item) => (
                     <NavButton
                       key={item.id}
-                      item={item}
+                      item={{ ...item, label: labelFor(item.id) }}
                       active={activeTab === item.id}
                       onClick={() => setActiveTab(item.id)}
                     />
                   ))}
                   <button
+                    onClick={toggleLanguage}
+                    className="border border-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-50 transition"
+                    title={language === "en" ? t("toggle_title_ar") : t("toggle_title_en")}
+                  >
+                    {language === "en" ? t("arabic") : t("english")}
+                  </button>
+                  <button
                     onClick={handleLogout}
                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
                   >
-                    Logout
+                    {t("logout")}
                   </button>
                 </div>
 
@@ -190,7 +235,7 @@ export default function InsightsPage() {
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-gray-900">
-                        {currentItem?.label}
+                        {currentItem ? labelFor(currentItem.id) : ""}
                       </div>
                     </div>
                   </div>
@@ -203,11 +248,17 @@ export default function InsightsPage() {
                   {navItems.map((item) => (
                     <NavButton
                       key={item.id}
-                      item={item}
+                      item={{ ...item, label: labelFor(item.id) }}
                       active={activeTab === item.id}
                       onClick={() => setActiveTab(item.id)}
                     />
                   ))}
+                  <button
+                    onClick={toggleLanguage}
+                    className="border border-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-50 transition"
+                  >
+                    {language === "en" ? t("arabic") : t("english")}
+                  </button>
                 </div>
               </div>
             </div>

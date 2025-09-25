@@ -1,8 +1,56 @@
+// import type { Metadata } from "next";
+// import { Geist, Geist_Mono } from "next/font/google";
+// import "./globals.css";
+// import { LanguageProvider } from "@/components/LanguageProvider";
+// import { CopilotKit } from "@copilotkit/react-core";
+// import "@copilotkit/react-ui/styles.css";
+
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
+
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
+
+// export const metadata: Metadata = {
+//   title: "ChatWithData",
+//   description: "Analayze and visualize your data with the power of AI.",
+// };
+
+// export default function RootLayout({
+//   children,
+// }: Readonly<{
+//   children: React.ReactNode;
+// }>) {
+//   return (
+//     <html lang="en">
+//       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+//         <LanguageProvider>
+//           <CopilotKit 
+//             runtimeUrl="/api/copilotkit"
+//             showDevConsole={false}
+//           >
+//             {children}
+//           </CopilotKit>
+//         </LanguageProvider>
+//       </body>
+//     </html>
+//   );
+// }
+
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
+
+// ✅ Import your ApiKeyProvider
+import { ApiKeyProvider } from "@/components/ApiKeyContext"; // <-- update this path!
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +64,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ChatWithData",
-  description: "Analayze and visualize your data with the power of AI.",
+  description: "Analyze and visualize your data with the power of AI.",
 };
 
 export default function RootLayout({
@@ -27,12 +75,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <CopilotKit 
-          runtimeUrl="/api/copilotkit"
-          showDevConsole={false}
-        >
-          {children}
-        </CopilotKit>
+        {/* ✅ Wrap globally here */}
+        <ApiKeyProvider>
+          <LanguageProvider>
+            <CopilotKit 
+              runtimeUrl="/api/copilotkit"
+              showDevConsole={false}
+            >
+              {children}
+            </CopilotKit>
+          </LanguageProvider>
+        </ApiKeyProvider>
       </body>
     </html>
   );

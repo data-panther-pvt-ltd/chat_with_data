@@ -6,6 +6,7 @@ import { AreaChart } from "./ui/area-chart";
 import { BarChart } from "./ui/bar-chart";
 import { DonutChart } from "./ui/pie-chart";
 import { SearchResults } from "./generative-ui/SearchResults";
+import { useLanguage } from "./LanguageProvider";
 import { 
   salesData, 
   productData, 
@@ -21,6 +22,47 @@ import {
 } from "../data/dashboard-data";
 
 export function Dashboard() {
+  const { language } = useLanguage();
+  const t = (key: string) => {
+    const dict = language === 'ar' ? {
+      total_revenue: 'إجمالي الإيرادات',
+      total_profit: 'إجمالي الربح',
+      customers: 'العملاء',
+      conversion_rate: 'معدل التحويل',
+      avg_order_value: 'متوسط قيمة الطلب',
+      profit_margin: 'هامش الربح',
+      sales_overview: 'نظرة عامة على المبيعات',
+      monthly_sales: 'بيانات المبيعات والأرباح الشهرية',
+      product_performance: 'أداء المنتج',
+      top_selling: 'أفضل المنتجات مبيعًا',
+      sales_by_category: 'المبيعات حسب الفئة',
+      distribution_across: 'التوزيع عبر الفئات',
+      categories_center: 'الفئات',
+      regional_sales: 'المبيعات الإقليمية',
+      by_region: 'المبيعات حسب المنطقة الجغرافية',
+      customer_demographics: 'التركيبة السكانية للعملاء',
+      spending_by_age: 'الإنفاق حسب الفئة العمرية',
+    } : {
+      total_revenue: 'Total Revenue',
+      total_profit: 'Total Profit',
+      customers: 'Customers',
+      conversion_rate: 'Conversion Rate',
+      avg_order_value: 'Avg Order Value',
+      profit_margin: 'Profit Margin',
+      sales_overview: 'Sales Overview',
+      monthly_sales: 'Monthly sales and profit data',
+      product_performance: 'Product Performance',
+      top_selling: 'Top selling products',
+      sales_by_category: 'Sales by Category',
+      distribution_across: 'Distribution across categories',
+      categories_center: 'Categories',
+      regional_sales: 'Regional Sales',
+      by_region: 'Sales by geographic region',
+      customer_demographics: 'Customer Demographics',
+      spending_by_age: 'Spending by age group',
+    };
+    return dict[key] ?? key;
+  };
   // Calculate metrics
   const totalRevenue = calculateTotalRevenue();
   const totalProfit = calculateTotalProfit();
@@ -82,27 +124,27 @@ export function Dashboard() {
       <div className="col-span-1 md:col-span-2 lg:col-span-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Total Revenue</p>
+            <p className="text-xs text-gray-500">{t('total_revenue')}</p>
             <p className="text-xl font-semibold text-gray-900">${totalRevenue.toLocaleString()}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Total Profit</p>
+            <p className="text-xs text-gray-500">{t('total_profit')}</p>
             <p className="text-xl font-semibold text-gray-900">${totalProfit.toLocaleString()}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Customers</p>
+            <p className="text-xs text-gray-500">{t('customers')}</p>
             <p className="text-xl font-semibold text-gray-900">{totalCustomers.toLocaleString()}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Conversion Rate</p>
+            <p className="text-xs text-gray-500">{t('conversion_rate')}</p>
             <p className="text-xl font-semibold text-gray-900">{conversionRate}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Avg Order Value</p>
+            <p className="text-xs text-gray-500">{t('avg_order_value')}</p>
             <p className="text-xl font-semibold text-gray-900">${averageOrderValue}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500">Profit Margin</p>
+            <p className="text-xs text-gray-500">{t('profit_margin')}</p>
             <p className="text-xl font-semibold text-gray-900">{profitMargin}</p>
           </div>
         </div>
@@ -111,8 +153,8 @@ export function Dashboard() {
       {/* Charts */}
       <Card className="col-span-1 md:col-span-2 lg:col-span-4">
         <CardHeader className="pb-1 pt-3">
-          <CardTitle className="text-base font-medium">Sales Overview</CardTitle>
-          <CardDescription className="text-xs">Monthly sales and profit data</CardDescription>
+          <CardTitle className="text-base font-medium">{t('sales_overview')}</CardTitle>
+          <CardDescription className="text-xs">{t('monthly_sales')}</CardDescription>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-60">
@@ -133,8 +175,8 @@ export function Dashboard() {
 
       <Card className="col-span-1 md:col-span-1 lg:col-span-2">
         <CardHeader className="pb-1 pt-3">
-          <CardTitle className="text-base font-medium">Product Performance</CardTitle>
-          <CardDescription className="text-xs">Top selling products</CardDescription>
+          <CardTitle className="text-base font-medium">{t('product_performance')}</CardTitle>
+          <CardDescription className="text-xs">{t('top_selling')}</CardDescription>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-60">
@@ -154,8 +196,8 @@ export function Dashboard() {
 
       <Card className="col-span-1 md:col-span-1 lg:col-span-2">
         <CardHeader className="pb-1 pt-3">
-          <CardTitle className="text-base font-medium">Sales by Category</CardTitle>
-          <CardDescription className="text-xs">Distribution across categories</CardDescription>
+          <CardTitle className="text-base font-medium">{t('sales_by_category')}</CardTitle>
+          <CardDescription className="text-xs">{t('distribution_across')}</CardDescription>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-60">
@@ -165,7 +207,7 @@ export function Dashboard() {
               index="name"
               valueFormatter={(value) => `${value}%`}
               colors={colors.categories}
-              centerText="Categories"
+              centerText={t('categories_center')}
               paddingAngle={0}
               showLabel={false}
               showLegend={true}
@@ -178,8 +220,8 @@ export function Dashboard() {
 
       <Card className="col-span-1 md:col-span-1 lg:col-span-2">
         <CardHeader className="pb-1 pt-3">
-          <CardTitle className="text-base font-medium">Regional Sales</CardTitle>
-          <CardDescription className="text-xs">Sales by geographic region</CardDescription>
+          <CardTitle className="text-base font-medium">{t('regional_sales')}</CardTitle>
+          <CardDescription className="text-xs">{t('by_region')}</CardDescription>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-60">
@@ -199,8 +241,8 @@ export function Dashboard() {
 
       <Card className="col-span-1 md:col-span-1 lg:col-span-2">
         <CardHeader className="pb-1 pt-3">
-          <CardTitle className="text-base font-medium">Customer Demographics</CardTitle>
-          <CardDescription className="text-xs">Spending by age group</CardDescription>
+          <CardTitle className="text-base font-medium">{t('customer_demographics')}</CardTitle>
+          <CardDescription className="text-xs">{t('spending_by_age')}</CardDescription>
         </CardHeader>
         <CardContent className="p-3">
           <div className="h-60">

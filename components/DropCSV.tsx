@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { useLanguage } from './LanguageProvider';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 import { Upload, FileText, BarChart3, TrendingUp, Download, Eye, Filter, Brain, AlertTriangle, Target, Lightbulb } from 'lucide-react';
 import * as Papa from 'papaparse';
@@ -43,6 +44,89 @@ interface AnalysisResult {
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0', '#87ceeb'];
 
 export default function CSVAnalyzer() {
+  const { language, isRTL } = useLanguage();
+  const t = (key: string) => {
+    const dict = language === 'ar' ? {
+      title: 'محلل بيانات CSV',
+      subtitle: 'ارفع، حلّل، وصوّر بياناتك فورًا',
+      upload_title: 'ارفع ملف CSV الخاص بك',
+      upload_hint: 'اسحب وأفلت أو انقر لاختيار ملف CSV',
+      choose_file: 'اختر ملفًا',
+      loaded: 'تم التحميل:',
+      analyzing: 'جارٍ تحليل بياناتك...',
+      total_rows: 'إجمالي الصفوف',
+      columns: 'الأعمدة',
+      numeric_cols: 'الأعمدة الرقمية',
+      text_cols: 'الأعمدة النصية',
+      ai_analysis: 'تحليل مدعوم بالذكاء الاصطناعي',
+      data_quality: 'تقييم جودة البيانات',
+      key_findings: 'أبرز النتائج',
+      patterns: 'الأنماط المكتشفة',
+      anomalies: 'الشذوذ والقيم المتطرفة',
+      recommendations: 'توصيات الذكاء الاصطناعي',
+      filter_placeholder: 'تصفية البيانات...',
+      select_two_numeric: 'اختر عمودين رقميين على الأقل لمخطط التبعثر',
+      chart_bar: 'مخطط أعمدة',
+      chart_line: 'مخطط خطي',
+      chart_pie: 'مخطط دائري',
+      chart_scatter: 'مخطط تبعثر',
+      data_viz: 'تصوّر البيانات',
+      col_stats: 'إحصاءات الأعمدة',
+      th_column: 'العمود',
+      th_type: 'النوع',
+      th_unique: 'القيم الفريدة',
+      th_null: 'القيم الفارغة',
+      th_min: 'الصغرى',
+      th_max: 'الكبرى',
+      th_mean: 'المتوسط',
+      th_mode: 'المنوال',
+      type_numeric: 'رقمي',
+      type_text: 'نصي',
+      type_date: 'تاريخ',
+      categories_center: 'الفئات',
+      product_perf: 'أداء المنتج',
+    } : {
+      title: 'CSV Data Analyzer',
+      subtitle: 'Upload, analyze, and visualize your data instantly',
+      upload_title: 'Upload Your CSV File',
+      upload_hint: 'Drag and drop or click to select your CSV file',
+      choose_file: 'Choose File',
+      loaded: 'Loaded:',
+      analyzing: 'Analyzing your data...',
+      total_rows: 'Total Rows',
+      columns: 'Columns',
+      numeric_cols: 'Numeric Columns',
+      text_cols: 'Text Columns',
+      ai_analysis: 'AI-Powered Analysis',
+      data_quality: 'Data Quality Assessment',
+      key_findings: 'Key Findings',
+      patterns: 'Patterns Detected',
+      anomalies: 'Anomalies & Outliers',
+      recommendations: 'AI Recommendations',
+      filter_placeholder: 'Filter data...',
+      select_two_numeric: 'Select at least 2 numeric columns for scatter plot',
+      chart_bar: 'Bar Chart',
+      chart_line: 'Line Chart',
+      chart_pie: 'Pie Chart',
+      chart_scatter: 'Scatter Chart',
+      data_viz: 'Data Visualization',
+      col_stats: 'Column Statistics',
+      th_column: 'Column',
+      th_type: 'Type',
+      th_unique: 'Unique',
+      th_null: 'Null',
+      th_min: 'Min',
+      th_max: 'Max',
+      th_mean: 'Mean',
+      th_mode: 'Mode',
+      type_numeric: 'numeric',
+      type_text: 'text',
+      type_date: 'date',
+      categories_center: 'Categories',
+      product_perf: 'Product Performance',
+    };
+    return (dict as any)[key] ?? key;
+  };
   const [csvData, setCsvData] = useState<CSVData[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -426,8 +510,8 @@ export default function CSVAnalyzer() {
         {/* Header */}
         <div className="text-center mb-12">
         
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">CSV Data Analyzer</h1>
-          <p className="text-xl text-gray-700">Upload, analyze, and visualize your data instantly</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('title')}</h1>
+          <p className="text-xl text-gray-700">{t('subtitle')}</p>
         </div>
 
         {/* Upload Section */}
@@ -435,8 +519,8 @@ export default function CSVAnalyzer() {
           <div className="text-center">
             <div className="border-2 border-dashed border-blue-300 rounded-xl p-8 hover:border-blue-400 transition-colors">
               <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Upload Your CSV File</h3>
-              <p className="text-gray-500 mb-4">Drag and drop or click to select your CSV file</p>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('upload_title')}</h3>
+              <p className="text-gray-500 mb-4">{t('upload_hint')}</p>
               <input
                 type="file"
                 accept=".csv"
@@ -449,11 +533,11 @@ export default function CSVAnalyzer() {
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-lg hover:from-slate-700 hover:to-slate-700 transition-all cursor-pointer"
               >
                 <FileText className="w-5 h-5 mr-2" />
-                Choose File
+                {t('choose_file')}
               </label>
               {fileName && (
                 <p className="mt-4 text-sm text-green-600 font-medium">
-                  Loaded: {fileName}
+                  {t('loaded')} {fileName}
                 </p>
               )}
             </div>
@@ -463,7 +547,7 @@ export default function CSVAnalyzer() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className="mt-4 text-gray-600">Analyzing your data...</p>
+            <p className="mt-4 text-gray-600">{t('analyzing')}</p>
           </div>
         )}
 
@@ -474,7 +558,7 @@ export default function CSVAnalyzer() {
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100">Total Rows</p>
+                    <p className="text-blue-100">{t('total_rows')}</p>
                     <p className="text-3xl font-bold">{analysis.summary.totalRows.toLocaleString()}</p>
                   </div>
                   <FileText className="w-8 h-8 text-blue-200" />
@@ -484,7 +568,7 @@ export default function CSVAnalyzer() {
               <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100">Columns</p>
+                    <p className="text-green-100">{t('columns')}</p>
                     <p className="text-3xl font-bold">{analysis.summary.totalColumns}</p>
                   </div>
                   <BarChart3 className="w-8 h-8 text-green-200" />
@@ -494,7 +578,7 @@ export default function CSVAnalyzer() {
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100">Numeric Columns</p>
+                    <p className="text-purple-100">{t('numeric_cols')}</p>
                     <p className="text-3xl font-bold">{analysis.summary.numericColumns.length}</p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-purple-200" />
@@ -504,7 +588,7 @@ export default function CSVAnalyzer() {
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100">Text Columns</p>
+                    <p className="text-orange-100">{t('text_cols')}</p>
                     <p className="text-3xl font-bold">{analysis.summary.textColumns.length}</p>
                   </div>
                   <FileText className="w-8 h-8 text-orange-200" />
@@ -514,24 +598,18 @@ export default function CSVAnalyzer() {
 
             {/* AI-Powered Insights */}
             <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                AI-Powered Analysis
-              </h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">{t('ai_analysis')}</h3>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Data Quality Assessment */}
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    Data Quality Assessment
-                  </h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">{t('data_quality')}</h4>
                   <p className="text-gray-700">{analysis.insights.dataQuality}</p>
                 </div>
 
                 {/* Key Findings */}
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    Key Findings
-                  </h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">{t('key_findings')}</h4>
                   <ul className="space-y-2">
                     {analysis.insights.keyFindings.map((finding, index) => (
                       <li key={index} className="text-gray-700 text-sm flex items-start">
@@ -544,9 +622,7 @@ export default function CSVAnalyzer() {
 
                 {/* Patterns Detected */}
                 <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-xl">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    Patterns Detected
-                  </h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">{t('patterns')}</h4>
                   <ul className="space-y-2">
                     {analysis.insights.patterns.map((pattern, index) => (
                       <li key={index} className="text-gray-700 text-sm flex items-start">
@@ -559,9 +635,7 @@ export default function CSVAnalyzer() {
 
                 {/* Anomalies */}
                 <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-xl">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    Anomalies & Outliers
-                  </h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">{t('anomalies')}</h4>
                   <ul className="space-y-2">
                     {analysis.insights.anomalies.map((anomaly, index) => (
                       <li key={index} className="text-gray-700 text-sm flex items-start">
@@ -575,9 +649,7 @@ export default function CSVAnalyzer() {
 
               {/* Recommendations */}
               <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
-                <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                  AI Recommendations
-                </h4>
+                <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">{t('recommendations')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {analysis.insights.recommendations.map((recommendation, index) => (
                     <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
@@ -596,7 +668,7 @@ export default function CSVAnalyzer() {
                   <Filter className="w-5 h-5 text-gray-500" />
                   <input
                     type="text"
-                    placeholder="Filter data..."
+                    placeholder={t('filter_placeholder')}
                     value={filterValue}
                     onChange={(e) => setFilterValue(e.target.value)}
                     className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -629,7 +701,7 @@ export default function CSVAnalyzer() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart
+                    {chartType === 'bar' ? t('chart_bar') : chartType === 'line' ? t('chart_line') : chartType === 'pie' ? t('chart_pie') : t('chart_scatter')}
                   </button>
                 ))}
               </div>
@@ -637,25 +709,25 @@ export default function CSVAnalyzer() {
 
             {/* Visualization */}
             <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6">Data Visualization</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('data_viz')}</h3>
               {renderChart()}
             </div>
 
             {/* Column Statistics */}
             <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6">Column Statistics</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('col_stats')}</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Column</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Type</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Unique</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Null</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Min</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Max</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Mean</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Mode</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_column')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_type')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_unique')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_null')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_min')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_max')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_mean')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('th_mode')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -668,7 +740,7 @@ export default function CSVAnalyzer() {
                             stat.type === 'date' ? 'bg-green-100 text-green-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {stat.type}
+                            {stat.type === 'numeric' ? t('type_numeric') : stat.type === 'date' ? t('type_date') : t('type_text')}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-gray-600">{stat.uniqueCount}</td>
