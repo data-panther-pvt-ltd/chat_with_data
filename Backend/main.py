@@ -529,10 +529,10 @@ async def text_chat(
         result = response.json()
         markdown_reply = result["choices"][0]["message"]["content"]
         plain_text_reply = markdown_to_text(markdown_reply)
-        return {
-            "reply": plain_text_reply,
-            "raw_markdown": markdown_reply
-        }
+        # Remove newline characters and clean up spacing
+        clean_reply = plain_text_reply.replace('\n', ' ').replace('\r', ' ')
+        clean_reply = ' '.join(clean_reply.split())
+        return clean_reply
 
     except Exception as e:
         print(f"Text chat error: {e}")
